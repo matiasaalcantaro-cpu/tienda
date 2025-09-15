@@ -129,6 +129,7 @@ function actualizarCarrito() {
         // TODO: Implementar lógica para carrito vacío
         return;
     }
+
     cartContainer.style.distplay = 'block';
     emptyCart.style.display = 'none';
     // TODO: Mostrar items del carrito
@@ -144,7 +145,7 @@ function actualizarCarrito() {
                 <div class="cart-item-image">${crearImagenCarrito(item)}</div>
                 <div class="cart-item-info">
                     <h4>${item.nombre}</h4>
-                    <div class="cart-item-price">$${item.precio.toFixed(2)}</div>
+                    <div class="cart-item-price">$${item.precio.toFixed(2)}</div>    
                 </div>
             </div>
             <div class="quantity-controls">
@@ -182,13 +183,23 @@ function cambiarCantidad(productoId, cambio) {
 
 // TODO: Función para actualizar cantidad directamente desde el input
 function actualizarCantidad(productoId, nuevaCantidad) {
-    // PISTA: Convierte nuevaCantidad a entero con parseInt()
-    // PISTA: Busca el item y actualiza su cantidad
-    // PISTA: Si la cantidad es <= 0, elimina el producto
+    const cantidad = parseInt(nuevaCantidad);
+    const item = carrito.find(p => p.id === productoId);
+    if (item) {
+        if (cantidad <= 0) {
+            eliminarDelCarrito(productoId);
+        } else {
+            item.cantidad = cantidad;
+        }
+    }
+    actualizarCarrito();
+
 }
 
 // TODO: Función para eliminar un producto del carrito
 function eliminarDelCarrito(productoId) {
+    carrito = carrito.filter(p => p.id !== productoId);
+    actualizarCarrito();
     // PISTA: Usa filter() para crear un nuevo array sin el producto a eliminar
     // PISTA: Actualiza el array carrito con el resultado del filter
     // PISTA: Llama a actualizarCarrito()
@@ -199,23 +210,39 @@ function actualizarTotal() {
     // TODO: Calcular el total sumando precio * cantidad de cada item
     // PISTA: Usa reduce() para sumar todos los subtotales
     // PISTA: Actualiza el textContent de totalAmount con el resultado
-    const total = 0; // Reemplaza esto con tu cálculo
+    const total = carrito.reduce((acum, item) => acum + item.precio * item.cantidad, 0);
     totalAmount.textContent = total.toFixed(2);
 }
 
 // TODO: Función para proceder al pago (básica)
 function procederPago() {
-    // PISTA: Verifica que el carrito no esté vacío
-    // PISTA: Puedes usar mostrarModal() para mostrar información de la compra
-    // PISTA: O usar alert() para una versión más simple
-    // PISTA: Pregunta al usuario si confirma la compra
-    // PISTA: Si confirma, vacía el carrito y muestra mensaje de éxito
+    if (carrito.lengtn === 0) {
+        alert("el carrito esta vacio. agrega productos antes de pagar .");
+        return;
+    }
+    const confirma = confirm("¿deseas confirmar la compra ?");
+    if (confirma) {
+        carrito = [];
+        actualizarCarrito();
+        alert("¡compra realizada con exito");
+    }
 }
 
 // TODO: Función para vaciar todo el carrito
 function vaciarCarrito() {
+    carrito = [];
+    actualizarCarrito();
     // PISTA: Asigna un array vacío a la variable carrito
     // PISTA: Llama a actualizarCarrito() para refrescar la vista
+}
+function agregarAlCarrito(producto) {
+    const item = carrito.find(p => p.id === producto.id);
+    if (item) {
+        item.cantidad++;
+    } else {
+        carrito.push({ ...producto, cantidad: 1 });
+    }
+    actualizarCarrito();
 }
 
 /* 
@@ -415,9 +442,40 @@ function mostrarModalLogin() {
     mostrarModal({
         icono: '👤',
         titulo: 'Iniciar Sesión',
-        mensaje: 'Funcionalidad de login en desarrollo.\n\nPronto podrás:\n• Guardar tu carrito\n• Ver historial de compras\n• Gestionar tus datos\n• Recibir ofertas exclusivas',
+        mensaje: `
+        <form id="login-form"style="display:flex;flex-direction:column;gap:10px;">
+        <input type="test"placeholder="usuario"required style="padding:8px;border-radius:4px;border:1px solid #ccc;">
+        <input type ="pasword" placeholder="contraseña"required style="padding":8px;border-radius:4px;border:1px solid #ccc;">
+        `,
         textoConfirmar: 'Entendido',
         textoCancel: '',
-        onConfirmar: null
+        onConfirmar:()=> {
+         const form = document.getElementById('login-form');
+         const email = form.elements[0].value;
+         const password = form.elements[1].value;
+         loginUsuario({email,password});
+        }
     });
+}
+const url ='https://xp8qpg8w-3000.brs.devtunnels.ms/auth/login';
+async function loginUsuario({email, password}) {
+    try{
+        const response = await fetch (url,{
+            method:'POST',
+            headers:{
+                'content-type':'application/json'
+            },
+            body: JSON.stringify({email,password})
+        });
+        const data= await response.json();
+        if (response.ok){
+            mostrarMensaje('inicio de sesion exitoso');
+            cerrarModal(documento.querySelector('.modal-overlay'));
+        }else{
+            mostrarMensaje('Error:$(data.error)');
+        }
+    }catch(error){
+        console.error('error en la  solicitud de login:',error);
+        mostrarMensaje('Error en la solicitud de login');
+    }
 }
