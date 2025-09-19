@@ -41,11 +41,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 });
 
 // Función para cargar productos desde JSON
+const PRODUCTS_URL = 'https://xp8qpg8w-3000.brs.devtunnels.ms/products';
 async function cargarProductos() {
     try {
-        const response = await fetch('./productos.json');
+        const response = await fetch('https://xp8qpg8w-3000.brs.devtunnels.ms/products');
         productos = await response.json();
-    } catch (error) {
+    } catch (error) { 
         console.error('Error cargando productos:', error);
         // Productos de respaldo en caso de error
         productos = [
@@ -63,17 +64,16 @@ async function cargarProductos() {
 // Función para mostrar los productos en la página
 function mostrarProductos() {
     productosContainer.innerHTML = '';
-
-    productos.forEach(producto => {
+    productos.products.forEach (producto => {
         const productoCard = document.createElement('div');
         productoCard.className = 'product-card';
 
         productoCard.innerHTML = `
             <div class="product-image">${crearImagenProducto(producto)}</div>
             <div class="product-info">
-                <h3 class="product-name">${producto.nombre}</h3>
-                <p class="product-description">${producto.descripcion}</p>
-                <div class="product-price">$${producto.precio.toFixed(2)}</div>
+                <h3 class="product-name">${producto.name}</h3>
+                <p class="product-description">${producto.description}</p>
+                <div class="product-price">$${producto.price.toFixed(2)}</div>
                 <button class="add-to-cart-btn" onclick="agregarAlCarrito(${producto.id})">
                     Agregar al Carrito
                 </button>
@@ -469,6 +469,8 @@ async function loginUsuario({email, password}) {
         });
         const data= await response.json();
         if (response.ok){
+            console.log(data);
+              localStorage.setItem("usuario",JSON.stringify(data));
             mostrarMensaje('inicio de sesion exitoso');
             cerrarModal(documento.querySelector('.modal-overlay'));
         }else{
